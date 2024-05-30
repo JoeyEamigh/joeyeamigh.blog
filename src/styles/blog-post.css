@@ -1,5 +1,6 @@
 article {
   @apply mx-auto max-w-prose p-4 lg:p-0;
+  word-wrap: break-word;
 
   h1 {
     @apply mb-2 mt-8 text-4xl font-bold lg:text-5xl;
@@ -33,7 +34,7 @@ article {
     @apply text-gray-300;
   }
 
-  p, 
+  p,
   img {
     margin-bottom: 1rem;
   }
