@@ -1,0 +1,7 @@
+html,
+body {
+  @apply font-inter flex h-full flex-1 flex-col bg-gray-800 text-white;
+
+  font-size: 14pt;
+  line-height: 1.5;
+}

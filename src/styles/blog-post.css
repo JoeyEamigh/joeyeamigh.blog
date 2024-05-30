@@ -1,0 +1,149 @@
+article {
+  @apply mx-auto max-w-prose p-4 lg:p-0;
+
+  h1 {
+    @apply mb-2 mt-8 text-4xl font-bold lg:text-5xl;
+
+    @media (max-width: 768px) {
+      &:first-child {
+        margin-top: 0;
+      }
+    }
+  }
+  h2 {
+    @apply mb-2 mt-8 text-3xl font-semibold lg:text-4xl;
+  }
+  h3 {
+    @apply mb-2 mt-4 text-2xl font-semibold lg:text-3xl;
+  }
+  h4 {
+    @apply mb-2 mt-4 text-xl font-semibold lg:text-2xl;
+  }
+  h5 {
+    @apply mb-2 mt-4 text-lg font-medium lg:text-xl;
+  }
+  h6 {
+    @apply mb-2 mt-4 text-base font-medium lg:text-lg;
+  }
+
+  a {
+    @apply text-gray-100 underline;
+  }
+  a:hover {
+    @apply text-gray-300;
+  }
+
+  p, 
+  img {
+    margin-bottom: 1rem;
+  }
+
+  ul:not(li ul),
+  ol:not(li ol) {
+    margin-bottom: 1rem;
+  }
+
+  img {
+    @apply mx-auto rounded-lg;
+    max-width: 100%;
+    height: auto;
+  }
+
+  code {
+    @apply rounded bg-gray-700 font-fira;
+    font-size: smaller;
+    padding: 2px 5px;
+  }
+  pre {
+    @apply rounded-lg;
+    padding: 1.5rem;
+  }
+  pre > code {
+    all: unset;
+  }
+
+  .astro-code {
+    @apply rounded border border-gray-700 bg-gray-700 font-fira text-sm;
+    margin-bottom: 1rem;
+
+    & code,
+    & span {
+      all: unset;
+    }
+  }
+
+  blockquote {
+    @apply border-l-4 border-gray-200 pl-4 text-xl;
+
+    & cite sup {
+      @apply ml-1;
+    }
+  }
+
+  hr {
+    @apply h-px border-0 bg-gray-500;
+  }
+
+  table {
+    @apply m-4 w-full table-auto;
+    border-collapse: collapse;
+
+    tr {
+      @apply border-b border-t border-gray-300;
+      text-align: left;
+      margin: 0;
+      padding: 0.5rem 1rem;
+
+      &:nth-child(2n) {
+        @apply bg-gray-100;
+      }
+
+      &:first-child {
+        border-top: 0;
+      }
+      &:last-child {
+        border-bottom: 0;
+      }
+    }
+    th {
+      @apply border-b border-gray-300;
+      text-align: left;
+      margin: 0;
+      padding: 0.5rem 1rem;
+    }
+    td {
+      text-align: left;
+      margin: 0;
+      padding: 0.5rem 1rem;
+    }
+  }
+
+  ul {
+    @apply ml-8 list-disc;
+  }
+  ol {
+    @apply ml-8 list-decimal;
+  }
+
+  mark {
+    @apply bg-cyan-500/40 text-white;
+  }
+
+  .sr-only {
+    border: 0;
+    padding: 0;
+    margin: 0;
+    position: absolute !important;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+    /* IE6, IE7 - a 0 height clip, off to the bottom right of the visible 1px box */
+    clip: rect(1px 1px 1px 1px);
+    /* maybe deprecated but we need to support legacy browsers */
+    clip: rect(1px, 1px, 1px, 1px);
+    /* modern browsers, clip-path works inwards from each corner */
+    clip-path: inset(50%);
+    /* added line to stop words getting smushed together (as they go onto separate lines and some screen readers do not understand line feeds as a space */
+    white-space: nowrap;
+  }
+}

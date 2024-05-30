@@ -1,0 +1,7 @@
+MIT AND CC BY-NC-ND 4.0
+
+The MIT License (found in the `LICENSE.MIT` file) covers all source code and documentation in this repository other than the blog posts themselves.
+
+The blog posts are licensed under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License (CC BY-NC-ND 4.0). You can find a copy of the license in the `LICENSE.CC-BY-NC-ND` file.
+
+The blog posts are `.md` files generally found in the `src/content/blog` directory. Source code embedded within `mdx` blog posts is covered by the MIT License, but text embedded via those components are still covered by the CC BY-NC-ND 4.0 license.

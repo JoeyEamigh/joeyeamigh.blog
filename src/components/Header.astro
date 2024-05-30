@@ -1,0 +1,38 @@
+---
+
+---
+
+<header class="flex justify-center p-8">
+  <h1 id="header-title" class="relative font-fira text-2xl lg:text-4xl">
+    <a href="/">joeyeamigh.blog</a>
+  </h1>
+</header>
+<style>
+  h1::after {
+    content: '';
+    background-color: white;
+    height: 100%;
+    width: 2px;
+
+    position: absolute;
+    right: -5px;
+    bottom: 0;
+
+    animation: blink 1s step-end infinite;
+
+    @media (prefers-reduced-motion) {
+      visibility: hidden;
+      animation: none;
+    }
+  }
+
+  @keyframes blink {
+    from,
+    to {
+      background-color: transparent;
+    }
+    50% {
+      background-color: white;
+    }
+  }
+</style>

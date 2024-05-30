@@ -1,0 +1,42 @@
+---
+import { getCollection } from 'astro:content';
+import FormattedDate from '../components/FormattedDate.astro';
+import BaseLayout from 'src/layouts/BaseLayout.astro';
+
+const posts = (await getCollection('blog')).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<BaseLayout>
+  <main class="mx-auto w-full max-w-prose px-4 lg:p-0">
+    <h2 class="border-b border-gray-200 pb-4 text-center text-2xl">Recent Posts</h2>
+    <ul class="flex flex-col gap-4 divide-y divide-gray-200 border-b border-gray-200 pb-4">
+      {
+        posts.map(post => (
+          <li class="relative px-2 pt-4">
+            <div class="mobile-break relative mb-2 md:flex md:justify-between">
+              <h4 class="text-xl font-semibold">{post.data.title}</h4>
+              <FormattedDate date={post.data.pubDate} class="flex-shrink-0" />
+            </div>
+            <p class="description">{post.data.description}</p>
+            <a aria-label={`Read post ${post.data.title}`} href={`/post/${post.slug}/`} class="absolute inset-0" />
+          </li>
+        ))
+      }
+    </ul>
+  </main>
+</BaseLayout>
+
+<style>
+  @media (max-width: 768px) {
+    .mobile-break::after {
+      @apply bg-gray-300;
+      content: '';
+      height: 1px;
+      width: 20%;
+
+      position: absolute;
+      left: 0;
+      bottom: -3px;
+    }
+  }
+</style>
