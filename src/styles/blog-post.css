@@ -28,7 +28,7 @@ article {
   }
 
   a {
-    @apply text-gray-100 underline;
+    @apply break-all text-gray-100 underline;
   }
   a:hover {
     @apply text-gray-300;
@@ -74,7 +74,7 @@ article {
   }
 
   blockquote {
-    @apply border-l-4 border-gray-200 pl-4 text-xl;
+    @apply border-l-4 border-gray-200 pl-4 text-base;
 
     & cite sup {
       @apply ml-1;
@@ -146,5 +146,17 @@ article {
     clip-path: inset(50%);
     /* added line to stop words getting smushed together (as they go onto separate lines and some screen readers do not understand line feeds as a space */
     white-space: nowrap;
+  }
+
+  .footnotes {
+    @apply mt-8 border-t border-gray-500 pt-8;
+
+    ol > li {
+      @apply text-sm;
+
+      & > p {
+        @apply mb-0;
+      }
+    }
   }
 }

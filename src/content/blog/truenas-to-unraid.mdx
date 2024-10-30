@@ -3,6 +3,7 @@ title: 'Migrating from TrueNAS Scale to Unraid 6.12.10'
 description: 'The story of my adventure migrating from TrueNAS Scale to Unraid 6.12.10. This seems like it would be a relatively painless endevor, but harrowing tales of hot-swapping kernel modules lie within.'
 pubDate: 'May 30 2024 18:00:00 UTC'
 ---
+
 import ExternalLink from '../../components/ExternalLink.astro';
 import { Image } from 'astro:assets';
 import UnraidDiskLayout from './assets/truenas-to-unraid/unraid-disk-layout.jpg';
@@ -17,7 +18,7 @@ Armed with this information, I began exploring possible ways to migrate the data
 
 ## Disclaimer
 
-This is not a tutorial. Please do not follow it like a tutorial. Doing so without a full understanding of what you are actually doing can cause permanent data loss. This blog post is known to the state of California to cause cancer. If you wish to attempt a migration from TrueNAS Scale to Unraid 6.12.x, and you are using this blog post as reference, please don't. Unraid 6.13 should be coming out soon and will fix the problems presented in this post.{/*The blog post is provided "as is", without warranty of any kind, express or implied. In no event shall the author be liable for any claim, damages or other liability arising from, out of, or in connection with the blog post.*/}
+This is not a tutorial. Please do not follow it like a tutorial. Doing so without a full understanding of what you are actually doing can cause permanent data loss. This blog post is known to the state of California to cause cancer. If you wish to attempt a migration from TrueNAS Scale to Unraid 6.12.x, and you are using this blog post as reference, please don't. Unraid 6.13 should be coming out soon and will fix the problems presented in this post.{/* The blog post is provided "as is", without warranty of any kind, express or implied. In no event shall the author be liable for any claim, damages or other liability arising from, out of, or in connection with the blog post. */}
 
 ## Training in Risk Tolerance
 
@@ -66,13 +67,14 @@ I knew that Unraid was build on Slackware, but as an Arch Linux user BTW myself 
 
 1. Slackware has no standard package manager
 2. Unraid is built off of a customized Slackware Current
-	- Slackware 15 contains `glibc` 2.33
-	- Slackware Current has `glibc` 2.38
-	- Unraid 6.12.10 contains `glibc` 2.37
+   - Slackware 15 contains `glibc` 2.33
+   - Slackware Current has `glibc` 2.38
+   - Unraid 6.12.10 contains `glibc` 2.37
 3. Slackware does not keep older versions of packages in their repositories
 4. `openzfs` is not in the standard Slackware repositories, and needs to be compiled against the correct kernel version
 
 ## I'm a `pacman` stan
+
 The lack of package manager didn't end up being as big of a problem as I thought it would be, as the community has developed `slackpkg`.
 
 ```sh
@@ -111,7 +113,6 @@ Three items need to be built for us to have a chance at mounting the ZFS pool.
 3. `openzfs` itself.
 
 Since `openzfs` needs to be built against the kernel version that will be using it, and Unraid does not include development headers, a _few_ dependencies need to be installed.
-
 
 ```sh
 slackpkg install openssl make gcc gcc-g++ cmake pkg autoconf automake guile gc bison binutils libtool m4 gettext kernel-headers elfutils bc util libtirpc
@@ -292,7 +293,15 @@ Once `openzfs` 2.2.x makes its way into Unraid this migration will be a lot more
 
 ## References
 
-- <ExternalLink href="https://github.com/Steini1984/unRAID6-ZFS">https://github.com/Steini1984/unRAID6-ZFS</ExternalLink>
-- <ExternalLink href='https://forums.unraid.net/topic/149813-migrating-from-truenas-scale-to-unraid/'>https://forums.unraid.net/topic/149813-migrating-from-truenas-scale-to-unraid/</ExternalLink>
-- <ExternalLink href='https://forums.unraid.net/topic/165369-migrating-from-truenas-scale-to-unraid/'>https://forums.unraid.net/topic/165369-migrating-from-truenas-scale-to-unraid/</ExternalLink>
-- <ExternalLink href='https://forums.unraid.net/topic/153274-how-to-non-irreversibly-migrate-from-truenas-core-with-zfs-to-unraid/'>https://forums.unraid.net/topic/153274-how-to-non-irreversibly-migrate-from-truenas-core-with-zfs-to-unraid/</ExternalLink>
+- <ExternalLink href="https://github.com/Steini1984/unRAID6-ZFS">
+    https://github.com/Steini1984/unRAID6-ZFS
+  </ExternalLink>
+- <ExternalLink href="https://forums.unraid.net/topic/149813-migrating-from-truenas-scale-to-unraid/">
+    https://forums.unraid.net/topic/149813-migrating-from-truenas-scale-to-unraid/
+  </ExternalLink>
+- <ExternalLink href="https://forums.unraid.net/topic/165369-migrating-from-truenas-scale-to-unraid/">
+    https://forums.unraid.net/topic/165369-migrating-from-truenas-scale-to-unraid/
+  </ExternalLink>
+- <ExternalLink href="https://forums.unraid.net/topic/153274-how-to-non-irreversibly-migrate-from-truenas-core-with-zfs-to-unraid/">
+    https://forums.unraid.net/topic/153274-how-to-non-irreversibly-migrate-from-truenas-core-with-zfs-to-unraid/
+  </ExternalLink>

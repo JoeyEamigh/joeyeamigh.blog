@@ -1,0 +1,146 @@
+---
+title: 'Physical Security Meets Digital Security'
+description: 'How I discovered plaintext passwords, source code, and a full authentication bypass for a physical security and HOA management app.'
+pubDate: 'Oct 30 2024 12:00:00 UTC'
+---
+
+import GeraltHmm from './assets/physical-digital-security/geralt-hmm.jpg';
+import { Image } from 'astro:assets';
+import { timeline } from './assets/physical-digital-security/timeline';
+import Timeline from '../../components/Timeline.astro';
+
+> <span class="!text-xs md:!text-sm">
+>   **Note:** The company mentioned in this post is small and works in the
+>   physical security industry. As such, I have agreed to grant them anonymity
+>   to avoid this blog showing up when their company name is searched for. This
+>   is against my general policy for security disclosures, but due to the very
+>   real risk of harm to their business, I have decided to make an exception for
+>   them.
+> </span>
+
+<br />
+
+A little over three months ago, I was gearing up to visit a friend's beach house. During our final planning session, I hear my friend muttering under their breath. Upon inquiry, I am told that the app used to create guest passes no longer has a working date selector on iOS. My friend, knowing full well that I am a software engineer and even the least serious jokes can nerdsnipe[^1] me, said, "Do you think you can make a better app?"
+
+I blinked my eyes and two hours had passed. I was sprawled on my friend's couch, as their patience wore thin, not even being subtle about their attempts to get me to leave at this point. I could care less, however (sorry friend \<3), as I had struck gold. With a single clumsy keypress, a result of my summer quest to learn Dvorak, I had just dumped plaintext passwords for every user on the site.
+
+## How Did We Get Here?[^2]
+
+The first step of making an app to interface with someone else's services is figuring out how data flows, the format of the data, and how the data is authenticated. The service that my friend's HOA uses to issue guest passes has a web portal as well as a mobile app, so I was not going to have to break out Frida. I coaxed my friend into (very reluctantly) giving me their password to the HOA portal, then quickly got to recording the network requests.
+
+The login page for the service asked for a `license`, `username`, and of course a `password`. The license was the name of the neighborhood my friend lived in, showing clear signs of a multi-tenant architecture. Upon login, the service issued a `token` that was passed as a GET param on every request. The `token` was accompanied by `licence` and `auth_username` params.
+
+The API routes themselves were using an odd mix of REST and RPC principles. The service makes calls to the general controller, then disambiguates using the `action` param. For example, one of the first calls the frontend makes after logging in is to `/api/v1/users?action=get_user`. Cookies are not sent with these requests, so without including the `token`, `auth_username`, or `license` params, the request elicits a `401`. So far, so good.
+
+While messing around copy-pasting the different GET requests from the Firefox Devtools into the URL bar, I somehow managed to add an `s` to the `get_user` request, making the route `/api/v1/users?action=get_users`. I noticed the mistake before I hit enter, but curiosity got the better of me and I tried it anyway.
+
+<Image alt="Geralt saying hmm." src={GeraltHmm} />
+
+To my utter shock, after about 40 lines of PHP errors at the top of the response, the 41st line held a perfect little JSON object, glinting in the moonlight. Among those brilliant quotes and curly braces my eyes beheld the best (worst) thing possible: plaintext passwords.
+
+## You would not believe your eyes, if ten million JSON lines
+
+Did the passwords work?? I did not see my friend's account in the list, and no amount of pagination params would elicit a different set of users from the endpoint. I knew I had to give the accounts a shot though, as simply walking away now would be a war crime to my curiosity.
+
+I fired up Tor on a remote server (always use protection), keyed in the first username and password on the list, held my breath, and pressed "Log In".
+
+## Did it really have to get worse?
+
+Oh. Oh no. Not only did the login credentials work, the first user listed by the server happened to be some sort of superuser, able to list all tenants of the software and log in to any of them. Just like that, I had full access to all clients' data, the ability to create new tenants, and to download all the data on the site.
+
+While this in and of itself was plenty of information for a disclosure, I was very curious if there were more oversights that I could include in the report. For science. Obviously.
+
+## Rabbits \_really\_ need to stop digging holes
+
+I checked for directory listings on the server, poking around some common paths and not finding much luck, until I checked the path I really should have checked first. For some reason, the `.htaccess` the company was using to protect their server was not applied to `.git`.
+
+Wait what? `.git` was accessible?
+
+The moment I saw that glorious Apache2 directory listing, I knew I just had to have a copy of the source code. For science. Obviously.
+
+I tossed together I quick `lftp` command, and made myself a 6pm coffee while I waited.
+
+```sh
+lftp -c 'mirror --parallel=100 https://[company].com/.git ;exit'
+```
+
+After the slowest 442MB download of my life, I had an empty directory with a `.git` folder in it. Time to recover some source code!!
+
+One `git reset` later, and I was staring at 113,224 lines of PHP code for me to peruse at my leisure.
+
+## How (not) to Authentication
+
+I was so curious as to what must have gone wrong in the authentication to allow a random HOA user to access passwords for everyone in the tenant. It was probably some subtle bug or a misconfigura-
+
+```php
+// api/v1/BaseController.php:140
+$encrypted_license = isset($_GET['encrypted_license']) && $_GET['encrypted_license'] ? $_GET['encrypted_license'] : null;
+$<hoa_name>_licenses = array('<hoa_name>', '<hoa_name>demo');
+$is_<hoa_name>_license = in_array($request_params['license'], $<hoa_name>_licenses);
+
+// do not check for token if has encrypted
+if ($encrypted_license) {
+	$is_token_valid = 1;
+}
+
+// api/v1/BaseController.php:197
+$is_allowed = $User->checkPermission($request_params);
+
+if (!$is_allowed && !$encrypted_license && !$is_<hoa_name>_license) {
+$error_response = array(
+	'success' => '0',
+	'code_error' => 'permission_error',
+	'message' => 'Not allowed to make this API call.',
+);
+```
+
+Oh. It's explicitly intentional. Lovely. And what's this about an encrypted license? Let me just visit...
+
+```
+https://[company].com/api/v1/users?action=get_users&license=[tenant]&encrypted_license=get-absolutely-pwned
+```
+
+Oh. There's the user list again. This time for any tenant.
+
+## Other Gems (wait that's ruby)
+
+So are passwords saved in the database as plaintext? Not quite actually! They are "encrypted" with `AES-128-ECB`, using a hard-coded 9 character password that is very easily guessable. Fantastic! The code explicitly decrypts the password when reading the user from the database, meaning any route that reads the users table explicitly includes a copy of the user's password.
+
+What about these tokens? Are they secure?
+
+```php
+private function _generateToken()
+{
+	$token = md5($this->token_secret . date("Y-m-d H:i:s"));
+	return $token;
+}
+```
+
+Oh. And of course the `token_secret` is another hard-coded string (at least 32 characters and seemingly random this time). The authentication code generates a token, then saves it in the database along with the `license`, `username`, and an `expiration` of one day from generation in the `America/New_York` timezone (for some reason). It certainly appears that the `token_secret` need not apply from my perspective, given that the `md5` hash is never compared against anything.
+
+## Disclosure
+
+I drafted a report to send to the company, set up a new Proton account (always use protection pt. 2), and submitted a ticket to their helpdesk. This company is in the physical security industry, remember, so I was rather nervous, as in my head I could see this going one of three ways:
+
+1. The report is ignored.
+2. The report is accepted and quietly fixed (best-case).
+3. I am threatened with a lawsuit.
+
+Thankfully, the team was very receptive to the feedback, and the best-case scenario came about. I cannot emphasize enough how quick and professional the team was in getting these fixed, and I wish I could give them the shout-out they deserve.
+
+## Parting words
+
+My point of contact at the company shared some insight into the process that went on behind the scenes, and I wanted to share it here as some food for thought for those who are building products:
+
+> As a small business, balancing speed with quality is a constant challenge. Early choices for speed led to tech debt, architectural gaps, and a flawed admin access strategy. As the team and product matured, we’ve made much more balanced decisions and have made it a point to invest in quality. That investment includes these fixes and other initiatives to revisit old architecture and tech debt.
+>
+> Your report highlighted the impact of these decisions. It was also a resource to fix the issues with both quality and speed. The problems, examples, and potential solutions you shared were all very detailed and clearly written. Thank you again for the time and effort you put into this. It’s been a positive and constructive experience for our company.
+
+As always, remember that security is a feature, never an afterthought.
+
+## Timeline
+
+<Timeline timeline={timeline} />
+
+[^1]: https://xkcd.com/356/
+[^2]: https://minecraft.fandom.com/wiki/Advancement#List_of_advancements
